@@ -1,15 +1,41 @@
-public class Board {
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.*;
+import java.util.Hashtable;
+
+import javax.swing.*;
+
+import javax.swing.JPanel;
+
+public class Board extends JPanel implements MouseListener{
+
+    private Graphics2D g2D;
     
     private Cell[][] board;
+    private Hashtable<Point, Cell> cells;
+    private int[][] aliveCoords;
 
     public Board() {
-        board = new Cell[18][11];
+        setBackground(Color.BLACK);
+        this.addMouseListener(this);
 
+        board = new Cell[41][73];
+        cells = new Hashtable<>();
+
+        int x = 0;
+        int y = 0;
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
                 board[row][col] = new Cell();
+                board[row][col].setX(x);
+                board[row][col].setY(y);
+                cells.put(new Point(x, y), board[row][col]);
+                x += 21;
             }
+            x = 0;
+            y += 21;
         }
+
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
                 makeBag(row, col);
@@ -41,25 +67,6 @@ public class Board {
         }
     }
 
-    public void tick() {
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board[row].length; col++) {
-                board[row][col].check();
-            }
-        }
-        for (int row = 0; row < board.length; row++) {
-            for (int col = 0; col < board[row].length; col++) {
-                board[row][col].tick();
-            }
-        }
-    }
-
-    public void setAlive(int[][] coordList) {
-        for (int[] coord : coordList) {
-            board[coord[0]][coord[1]].setState(CellStates.ALIVE);
-        }
-    }
-
     public void printBoard() {
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
@@ -70,6 +77,81 @@ public class Board {
         }
         System.out.println();
     }
+
+    boolean aliveSet = false;
+
+    @Override
+    public void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        g2D = (Graphics2D) g;
+
+        // if (!aliveSet) setAlive();
+        drawBoard();
+    }
+
+    public void drawBoard() {
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                if (board[row][col].getState().equals(CellStates.ALIVE)) {
+                    g2D.setColor(Color.BLACK);
+                } else {
+                    g2D.setColor(Color.WHITE);
+                }
+                g2D.fill(new Rectangle2D.Double(board[row][col].getX(), board[row][col].getY(), 20, 20));
+            }
+        }
+    }
+
+    public void setAlive() {
+        g2D.setColor(Color.BLACK);
+        if (aliveCoords.length > 0) {
+            for (int[] coord : aliveCoords) {
+                board[coord[0]][coord[1]].setState(CellStates.ALIVE);
+                g2D.fill(new Rectangle2D.Double(board[coord[0]][coord[1]].getX(), board[coord[0]][coord[1]].getY(), 20, 20));
+            }
+            aliveSet = true;
+        }
+    }
+
+    public void tick() {
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                board[row][col].check();
+            }
+        }
+
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                board[row][col].tick();
+            }
+        }
+
+        repaint();
+    }
+
+    public void setAliveCoords(int[][] aliveCoords) {
+        this.aliveCoords = aliveCoords;
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        Point clickPoint = new Point();
+        clickPoint.x = e.getX() - (e.getX() % 21);
+        clickPoint.y = e.getY() - (e.getY() % 21);
+
+        cells.get(clickPoint).switchState();
+
+        repaint();
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {}
+    @Override
+    public void mouseReleased(MouseEvent e) {}
+    @Override
+    public void mouseExited(MouseEvent e) {}
+    @Override
+    public void mouseEntered(MouseEvent e) {}
 
     public static void main(String[] args) {
         Board board = new Board();
@@ -120,7 +202,7 @@ public class Board {
             {13, 5},
             {14, 5}
         };
-        board.setAlive(pentadecathlon);
+        board.setAliveCoords(pentadecathlon);
         board.printBoard();
 
         for (int i = 0; i < 37; i++) {

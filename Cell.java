@@ -2,6 +2,8 @@ public class Cell {
     
     private CellStates state;
     private Bag<Cell> adjCells;
+    private int x;
+    private int y;
 
     private boolean shouldSwitch;
 
@@ -25,15 +27,20 @@ public class Cell {
         } 
     }
 
-    public void tick() {
+    public CellStates tick() {
         if (shouldSwitch) {
-            if (state.equals(CellStates.ALIVE)) state = CellStates.DEAD;
-            else state = CellStates.ALIVE;
+            switchState();
         }
+        return state;
     }
 
     public void setState(CellStates state) {
         this.state = state;
+    }
+
+    public void switchState() {
+        if (state.equals(CellStates.ALIVE)) state = CellStates.DEAD;
+        else state = CellStates.ALIVE;
     }
 
     public CellStates getState() {
@@ -42,5 +49,21 @@ public class Cell {
 
     public void addAdjCell(Cell cell) {
         adjCells.add(cell);
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
     }
 }
